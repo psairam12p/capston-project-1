@@ -82,28 +82,28 @@ def get_video_info(video_ids):
                         )
             video_data.append(data)
     return video_data
-#get comment information
+#get comment information  _____________________________________________________________________________________________________________________________________
 def get_comment_info(video_ids):
-        Comment_Information = []
-        try:
-                for video_id in video_ids:
+    Comment_Information1 = []
+    try:
+        for video_id in video_ids:
 
-                        request = youtube.commentThreads().list(part = "snippet",videoId = video_id,maxResults = 50)
-                        response5 = request.execute()
-                        
-                        for item in response5["items"]:
-                                comment_information = dict(
-                                        Comment_Id = item["snippet"]["topLevelComment"]["id"],
-                                        Video_Id = item["snippet"]["videoId"],
-                                        Comment_Text = item["snippet"]["topLevelComment"]["snippet"]["textOriginal"],
-                                        Comment_Author = item["snippet"]["topLevelComment"]["snippet"]["authorDisplayName"],
-                                        Comment_Published = item["snippet"]["topLevelComment"]["snippet"]["publishedAt"])
+            request = youtube.commentThreads().list(part = "snippet",videoId = video_id,maxResults = 5)
+            response5 = request.execute()
+            
+            for item in response5["items"]:
+                comment_information = dict(
+                        Comment_Id = item["snippet"]["topLevelComment"]["id"],
+                        Video_Id = item["snippet"]["videoId"],
+                        Comment_Text = item["snippet"]["topLevelComment"]["snippet"]["textOriginal"],
+                        Comment_Author = item["snippet"]["topLevelComment"]["snippet"]["authorDisplayName"],
+                        Comment_Published = item["snippet"]["topLevelComment"]["snippet"]["publishedAt"])
 
-                                Comment_Information.append(comment_information)
-        except:
-                pass
-                
-        return Comment_Information
+                Comment_Information1.append(comment_information)
+    except:
+        pass
+        
+    return Comment_Information1
 #MongoDB Connection
 client = pymongo.MongoClient("mongodb+srv://psairam12p:Sairam123@cluster0.3k9xchw.mongodb.net/")
 db = client["Youtube_data"]
@@ -116,10 +116,11 @@ def channel_details(channel_id):
     vi_details = get_video_info(vi_ids)
     com_details = get_comment_info(vi_ids)
 
-    coll1 = db["channel_details"]
+    
     coll1.insert_one({"channel_information":ch_details,"video_information":vi_details,"comment_information":com_details})
     
     return "upload completed successfully"
+
 def channels_table():
     mydb = mysql.connector.connect(host="localhost",user="root",password="9391674255",database="guvi")
     cursor = mydb.cursor()
@@ -147,26 +148,27 @@ def channels_table():
     df = pd.DataFrame(ch_list)
 
     for index,row in df.iterrows():
-        insert_query = '''INSERT into channels(Channel_Name,
-                                                    Channel_Id,
-                                                    
-                                                    Views,
-                                                    Total_Videos,
-                                                    Channel_Description,
-                                                    Playlist_Id)
-                                        VALUES(%s,%s,%s,%s,%s,%s)'''
-            
-
-        values =(
-                row['Channel_Name'],
-                row['Channel_Id'],
+        if a1==row['Channel_Name']:
+            insert_query = '''INSERT ignore into channels (Channel_Name,
+                                                        Channel_Id,
+                                                        
+                                                        Views,
+                                                        Total_Videos,
+                                                        Channel_Description,
+                                                        Playlist_Id)
+                                            VALUES(%s,%s,%s,%s,%s,%s)'''
                 
-                row['Views'],
-                row['Total_Videos'],
-                row['Channel_Description'],
-                row['Playlist_Id'])
-        cursor.execute(insert_query,values)
-        mydb.commit()
+            
+            values =(
+                    row['Channel_Name'],
+                    row['Channel_Id'],
+                    
+                    row['Views'],
+                    row['Total_Videos'],
+                    row['Channel_Description'],
+                    row['Playlist_Id'])
+            cursor.execute(insert_query,values)
+            mydb.commit()
 
         
 def videos_table():
@@ -210,46 +212,47 @@ def videos_table():
         
 
     for index, row in df2.iterrows():
-        insert_query = '''
-                    INSERT INTO videos (Channel_Name,
-                        Channel_Id,
-                        Video_Id, 
-                        Title, 
-                        Tags,
-                        Thumbnail,
-                        Description, 
-                        Published_Date,
-                        Duration, 
-                        Views, 
-                        Likes,
-                        Comments,
-                        Favorite_Count, 
-                        Definition, 
-                        Caption_Status 
-                        )
-                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+        if a1==row['Channel_Name']:
+            insert_query = '''
+                        INSERT ignore INTO videos (Channel_Name,
+                            Channel_Id,
+                            Video_Id, 
+                            Title, 
+                            Tags,
+                            Thumbnail,
+                            Description, 
+                            Published_Date,
+                            Duration, 
+                            Views, 
+                            Likes,
+                            Comments,
+                            Favorite_Count, 
+                            Definition, 
+                            Caption_Status 
+                            )
+                        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
 
-                '''
-        values = (
-                    row['Channel_Name'],
-                    row['Channel_Id'],
-                    row['Video_Id'],
-                    row['Title'],
-                    str(row['Tags']),
-                    row['Thumbnail'],
-                    row['Description'],
-                    datetime.fromisoformat(row['Published_Date'][:-1]),
-                    isodate.parse_duration(row['Duration']).total_seconds(),
-                    row['Views'],
-                    row['Likes'],
-                    row['Comments'],
-                    row['Favorite_Count'],
-                    row['Definition'],
-                    row['Caption_Status'])
-        
-        cursor.execute(insert_query,values)
-        mydb.commit()
+                    '''
+            values = (
+                        row['Channel_Name'],
+                        row['Channel_Id'],
+                        row['Video_Id'],
+                        row['Title'],
+                        str(row['Tags']),
+                        row['Thumbnail'],
+                        row['Description'],
+                        datetime.fromisoformat(row['Published_Date'][:-1]),
+                        isodate.parse_duration(row['Duration']).total_seconds(),
+                        row['Views'],
+                        row['Likes'],
+                        row['Comments'],
+                        row['Favorite_Count'],
+                        row['Definition'],
+                        row['Caption_Status'])
             
+            cursor.execute(insert_query,values)
+            mydb.commit()
+              
 
         
 def comments_table():
@@ -266,7 +269,8 @@ def comments_table():
                         Video_Id varchar(225),
                         Comment_Text text, 
                         Comment_Author varchar(225),
-                        Comment_Published DATETIME)'''
+                        Comment_Published DATETIME,
+                        foreign key(Video_Id) references videos(Video_Id))'''
         cursor.execute(create_query)
         mydb.commit()
     except:
@@ -280,10 +284,11 @@ def comments_table():
             com_list.append(com_data["comment_information"][i])
     df3 = pd.DataFrame(com_list)
 
-
+    a2=choose.index(a1)
     for index, row in df3.iterrows():
+ 
             insert_query = '''
-                INSERT INTO comments (Comment_Id,
+                INSERT ignore INTO comments (Comment_Id,
                                     Video_Id ,
                                     Comment_Text,
                                     Comment_Author,
@@ -300,7 +305,7 @@ def comments_table():
             )
             cursor.execute(insert_query,values)
             mydb.commit()
-
+        
 
 def tables():
     channels_table()
@@ -356,13 +361,26 @@ if st.button("Collect and Store data"):
         if channel in ch_ids:
             st.success("Channel details of the given channel id: " + channel + " already exists")
         else:
-            output = channel_details(channels)
+            output = channel_details(channel)
             st.success(output)
-            
-if st.button("Migrate to SQL"):
+
+client = pymongo.MongoClient("mongodb+srv://psairam12p:Sairam123@cluster0.3k9xchw.mongodb.net/")
+db = client["Youtube_data"]
+coll1 = db["channel_details"]
+ch_list=[]
+for ch_data in coll1.find({},{"_id":0,"channel_information":1}):
+        ch_list.append(ch_data["channel_information"])
+df = pd.DataFrame(ch_list)
+choose=[None]
+
+for index,row in df.iterrows():
+    choose.append(row['Channel_Name'])   
+
+if a1:=st.selectbox("Migrate to SQL",(choose)):
     display = tables()
     st.success(display)
-    
+a2=choose.index(a1)
+   
 show_table = st.radio("SELECT THE TABLE FOR VIEW",(":green[channels]",":red[videos]",":blue[comments]"))
 
 if show_table == ":green[channels]":
